@@ -452,7 +452,7 @@ export default function App() {
               animationDelay: "0.1s",
             }}
           >
-            Aarna&apos;s Garden
+            Aarna and Yuvi&apos;s Garden
           </h1>
 
           {/* Sub */}
