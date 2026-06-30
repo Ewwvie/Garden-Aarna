@@ -609,7 +609,7 @@ export default function App() {
             {[
               { value: days, label: "days together" },
               { value: flowerCount, label: "blooms" },
-              { value: Math.max(0, days), label: "nights I thought of you" },
+              { value: Math.max(0, days+20), label: "nights I thought of you" },
             ].map((stat) => (
               <div
                 key={stat.label}
