@@ -2,3 +2,8 @@ node_modules
 .vite
 dist
 .env
+node_modules/
+dist/
+.vite/
+*.mp4
+*.mov
