@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+
 const START_DATE = new Date(2026, 5, 14);
 
 function daysSince(start: Date): number {
@@ -54,6 +55,111 @@ function buildFlowers(days: number): FlowerData[] {
     });
   }
   return flowers;
+}
+
+// ─────────────────────────────────────────────────────────────
+// PHOTO GALLERY — HOW TO ADD PHOTOS LATER
+// 1. Put image files in: src/assets/photos/
+//    (e.g. src/assets/photos/us-1.jpg, park-day.png, etc.)
+// 2. That's it. Every image in that folder shows up automatically
+//    below, in a grid that grows to fit however many you add.
+//    No code edits needed — no imports, no array entries.
+// 3. Optional: to give a photo a caption, name the file like
+//    "day-one.jpg" and it'll show as "day one" underneath.
+//    (Just swap dashes/underscores for spaces — edit prettifyName
+//    below if you want different formatting.)
+// ─────────────────────────────────────────────────────────────
+
+interface GardenPhoto {
+  src: string;
+  caption: string;
+}
+
+const PLACEHOLDER_COLORS = ["#f4a8b8", "#f7c9a8", "#c4a8d4", "#b8d4a8", "#f0b3c4", "#e98ea0"];
+
+function prettifyName(filename: string): string {
+  const base = filename.split("/").pop() ?? filename;
+  const withoutExt = base.replace(/\.[^/.]+$/, "");
+  return withoutExt.replace(/[-_]+/g, " ").trim();
+}
+// Vite auto-imports every image and video in this folder as a URL.
+// Drop new files in src/assets/photos/ and they appear here automatically.
+const mediaModules = import.meta.glob("../assets/photos/*.{jpg,jpeg,png,webp,gif,mp4,mov,webm}", {
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
+
+const PHOTOS: GardenPhoto[] = Object.entries(mediaModules)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([path, src]) => ({ src, caption: prettifyName(path) }));
+  function PhotoCard({ photo, rotate }: { photo: GardenPhoto; rotate: number }) {
+  // Check if the source file is a video format
+  const isVideo = /\.(mp4|mov|webm)($|\?)/i.test(photo.src) || photo.src.startsWith("data:video/");
+
+  return (
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 12,
+        padding: 8,
+        paddingBottom: 28,
+        boxShadow: "0 10px 24px -10px rgba(58,46,53,0.22)",
+        transform: `rotate(${rotate}deg)`,
+        transition: "transform 0.25s ease",
+        position: "relative",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          aspectRatio: "1 / 1",
+          borderRadius: 8,
+          overflow: "hidden",
+          position: "relative",
+          background: "#f0ede9", // fallback background color
+        }}
+      >
+        {isVideo ? (
+          <video
+            src={photo.src}
+            muted
+            autoPlay
+            loop
+            playsInline
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              background: `center / cover no-repeat url(${photo.src})`,
+            }}
+          />
+        )}
+      </div>
+      <p
+        style={{
+          position: "absolute",
+          bottom: 6,
+          left: 0,
+          right: 0,
+          textAlign: "center",
+          fontFamily: "'Lora', serif",
+          fontStyle: "italic",
+          fontSize: 12,
+          color: "#a8929a",
+          margin: 0,
+        }}
+      >
+        {photo.caption}
+      </p>
+    </div>
+  );
 }
 
 const BLOOM_COLORS = [
@@ -721,6 +827,42 @@ export default function App() {
               </span>
               <span style={{ fontSize: 18 }}>🌸</span>
             </div>
+          </div>
+
+          {/* Photo gallery */}
+          <div
+            className="fade-up"
+            style={{
+              marginTop: 28,
+              animationDelay: "0.38s",
+            }}
+          >
+            <p
+              style={{
+                fontFamily: "'Lora', serif",
+                fontStyle: "italic",
+                fontSize: 13,
+                color: "#a8929a",
+                margin: "0 0 14px",
+              }}
+            >
+              little moments
+            </p>
+            {PHOTOS.length === 0 ? (
+              <EmptyGalleryHint />
+            ) : (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
+                  gap: 16,
+                }}
+              >
+                {PHOTOS.map((photo, i) => (
+                  <PhotoCard key={photo.src} photo={photo} rotate={i % 2 === 0 ? -2.5 : 2.5} />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Footer note */}
