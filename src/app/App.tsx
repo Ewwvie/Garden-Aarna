@@ -67,7 +67,7 @@ function prettifyName(filename: string): string {
   return withoutExt.replace(/[-_]+/g, " ").trim();
 }
 
-// @ts-ignore - Ignoring the import.meta typescript error so Vite builds smoothly
+// @ts-ignore
 const mediaModules = import.meta.glob("../assets/photos/*.{jpg,jpeg,png,webp,gif,mp4,mov,webm}", {
   eager: true,
   import: "default",
@@ -91,7 +91,6 @@ function EmptyGalleryHint() {
 }
 
 function PhotoCard({ photo, rotate }: { photo: GardenPhoto; rotate: number }) {
-  // This is the check that tells the app if the file is a video or image
   const isVideo = /\.(mp4|webm|mov|ogg)(\?.*)?$/i.test(photo.src);
 
   return (
@@ -412,6 +411,54 @@ export default function App() {
   const flowers = buildFlowers(days);
   const flowerCount = flowers.filter((f) => f.hasBoom).length;
 
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  
+  // Create persistent, background audio instance untouched by React rendering lifecycle
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const audio = new Audio("/song.mp3");
+    audio.loop = true;
+    audioRef.current = audio;
+
+    return () => {
+      audio.pause();
+    };
+  }, []);
+
+  const handleEnterGarden = () => {
+    if (audioRef.current) {
+      console.log("Attempting synchronous playback context...");
+      // 1. Play first to secure browser user-gesture token smoothly
+      audioRef.current.play()
+        .then(() => {
+          console.log("Playback successful!");
+          setIsPlaying(true);
+          setIsUnlocked(true); // 2. Reveal screen only after token passes
+        })
+        .catch((err) => {
+          console.error("Audio block or missing file error details:", err);
+          // Let them enter even if audio file is corrupted or missing 404
+          setIsUnlocked(true); 
+        });
+    } else {
+      setIsUnlocked(true);
+    }
+  };
+
+  const toggleMusic = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play()
+        .then(() => setIsPlaying(true))
+        .catch((err) => console.error("Toggle block error:", err));
+    }
+  };
+
   return (
     <>
       <style>{`
@@ -467,26 +514,18 @@ export default function App() {
           to { opacity: 1; transform: translateY(0); }
         }
 
-        .star-twinkle {
-          animation: twinkle 3s ease-in-out infinite;
+        @keyframes pulseMusic {
+          0% { transform: scale(1); box-shadow: 0 8px 24px rgba(196,111,136,0.15); }
+          50% { transform: scale(1.04); box-shadow: 0 8px 32px rgba(196,111,136,0.3); }
+          100% { transform: scale(1); box-shadow: 0 8px 24px rgba(196,111,136,0.15); }
         }
 
-        .stem-sway {
-          animation: sway 3.5s ease-in-out infinite;
-        }
-
-        .flower-group {
-          animation: sway 3.5s ease-in-out infinite;
-        }
-
-        .grass-sway {
-          animation: swayGrass 2.8s ease-in-out infinite;
-        }
-
-        .butterfly {
-          animation: float 6s ease-in-out infinite;
-        }
-
+        .star-twinkle { animation: twinkle 3s ease-in-out infinite; }
+        .stem-sway { animation: sway 3.5s ease-in-out infinite; }
+        .flower-group { animation: sway 3.5s ease-in-out infinite; }
+        .grass-sway { animation: swayGrass 2.8s ease-in-out infinite; }
+        .butterfly { animation: float 6s ease-in-out infinite; }
+        
         .wing-left {
           animation: wingFlap 0.35s ease-in-out infinite alternate;
           transform-origin: right center;
@@ -497,14 +536,82 @@ export default function App() {
           transform-origin: left center;
         }
 
-        .fade-up {
-          animation: fadeUp 0.7s ease-out both;
-        }
-
-        .sun-shimmer {
-          animation: shimmer 4s ease-in-out infinite;
-        }
+        .fade-up { animation: fadeUp 0.7s ease-out both; }
+        .sun-shimmer { animation: shimmer 4s ease-in-out infinite; }
+        .music-playing { animation: pulseMusic 2s infinite ease-in-out; }
       `}</style>
+
+      {/* Entry Gate Overlay */}
+      {!isUnlocked && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "linear-gradient(160deg, #faf5f0 0%, #edf0f5 100%)",
+            zIndex: 100000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              padding: "40px 32px",
+              borderRadius: 24,
+              maxWidth: 380,
+              width: "100%",
+              textAlign: "center",
+              boxShadow: "0 20px 50px -15px rgba(58,46,53,0.15)",
+              border: "1px solid rgba(196,111,136,0.12)",
+            }}
+          >
+            <span style={{ fontSize: 42, display: "block", marginBottom: 16 }}>🌸</span>
+            <h2
+              style={{
+                fontFamily: "'Lora', serif",
+                fontSize: 24,
+                color: "#3a2e35",
+                margin: "0 0 10px",
+                fontWeight: 600,
+              }}
+            >
+              Yuvi & Aarna&apos;s Garden
+            </h2>
+            <p
+              style={{
+                fontSize: 14,
+                color: "#a8929a",
+                lineHeight: 1.5,
+                margin: "0 0 28px",
+              }}
+            >
+              Welcome to our little world. Turn your sound up to listen to the garden sing!
+            </p>
+            <button
+              onClick={handleEnterGarden}
+              style={{
+                background: "linear-gradient(135deg, #e98ea0 0%, #c46f88 100%)",
+                border: "none",
+                borderRadius: 99,
+                padding: "14px 36px",
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 600,
+                fontSize: 15,
+                color: "#fff",
+                cursor: "pointer",
+                boxShadow: "0 8px 24px -6px rgba(233,142,160,0.5)",
+                transition: "transform 0.2s ease",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.03)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            >
+              Enter Garden ✦
+            </button>
+          </div>
+        </div>
+      )}
 
       <div
         style={{
@@ -602,30 +709,8 @@ export default function App() {
 
             <Stars count={28} />
 
-            <div
-              style={{
-                position: "absolute",
-                top: 55,
-                left: "8%",
-                width: 90,
-                height: 28,
-                borderRadius: 20,
-                background: "rgba(255,255,255,0.06)",
-                filter: "blur(6px)",
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                top: 42,
-                left: "22%",
-                width: 55,
-                height: 18,
-                borderRadius: 20,
-                background: "rgba(255,255,255,0.04)",
-                filter: "blur(4px)",
-              }}
-            />
+            <div style={{ position: "absolute", top: 55, left: "8%", width: 90, height: 28, borderRadius: 20, background: "rgba(255,255,255,0.06)", filter: "blur(6px)" }} />
+            <div style={{ position: "absolute", top: 42, left: "22%", width: 55, height: 18, borderRadius: 20, background: "rgba(255,255,255,0.04)", filter: "blur(4px)" }} />
 
             {days >= 2 && <Butterfly x={18} y={38} delay={0.4} color="#f4a8b8" />}
             {days >= 8 && <Butterfly x={62} y={28} delay={1.8} color="#c4a8d4" />}
@@ -642,30 +727,12 @@ export default function App() {
                 borderRadius: "0 0 20px 20px",
               }}
             >
-              <div
-                style={{
-                  position: "absolute",
-                  top: -1,
-                  left: 0,
-                  right: 0,
-                  height: 3,
-                  background: "linear-gradient(90deg, transparent, rgba(150,190,110,0.35), rgba(120,160,80,0.4), rgba(150,190,110,0.35), transparent)",
-                  filter: "blur(1px)",
-                }}
-              />
+              <div style={{ position: "absolute", top: -1, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, transparent, rgba(150,190,110,0.35), rgba(120,160,80,0.4), rgba(150,190,110,0.35), transparent)", filter: "blur(1px)" }} />
             </div>
 
             <GardenSVG flowers={flowers} />
 
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                borderRadius: 20,
-                background: "radial-gradient(ellipse at center, transparent 50%, rgba(20,10,25,0.25) 100%)",
-                pointerEvents: "none",
-              }}
-            />
+            <div style={{ position: "absolute", inset: 0, borderRadius: 20, background: "radial-gradient(ellipse at center, transparent 50%, rgba(20,10,25,0.25) 100%)", pointerEvents: "none" }} />
           </div>
 
           <div
@@ -720,30 +787,6 @@ export default function App() {
               overflow: "hidden",
             }}
           >
-            <svg
-              style={{ position: "absolute", top: -12, right: -12, opacity: 0.07, pointerEvents: "none" }}
-              width="120"
-              height="120"
-              viewBox="0 0 120 120"
-              fill="none"
-            >
-              {Array.from({ length: 8 }).map((_, p) => {
-                const angle = (p / 8) * Math.PI * 2;
-                return (
-                  <ellipse
-                    key={p}
-                    cx={60 + Math.cos(angle) * 28}
-                    cy={60 + Math.sin(angle) * 28}
-                    rx="18"
-                    ry="11"
-                    transform={`rotate(${(angle * 180) / Math.PI} ${60 + Math.cos(angle) * 28} ${60 + Math.sin(angle) * 28})`}
-                    fill="#e98ea0"
-                  />
-                );
-              })}
-              <circle cx="60" cy="60" r="10" fill="#e98ea0" />
-            </svg>
-
             <p style={{ fontFamily: "'Lora', serif", fontStyle: "italic", fontSize: 14, color: "#a8929a", margin: "0 0 12px" }}>
               for Aarna,
             </p>
@@ -754,16 +797,7 @@ export default function App() {
               <span style={{ fontSize: "0.88em", color: "#c46f88" }}>(more than you 😤)</span>
             </p>
 
-            <div
-              style={{
-                marginTop: 20,
-                paddingTop: 18,
-                borderTop: "1px solid rgba(196,111,136,0.12)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
+            <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(196,111,136,0.12)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "#b8a4ae", letterSpacing: "0.04em" }}>
                 — growing a little more every day
               </span>
@@ -790,6 +824,32 @@ export default function App() {
             a new bloom every few days ✦
           </p>
         </div>
+      </div>
+
+      {/* Floating Music Toggle Button */}
+      <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 9999 }}>
+        <button
+          onClick={toggleMusic}
+          className={isPlaying ? "music-playing" : ""}
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: "50%",
+            background: "rgba(255, 255, 255, 0.85)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(196, 111, 136, 0.25)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 20,
+            transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+            outline: "none",
+          }}
+          title={isPlaying ? "Pause Music" : "Play Music"}
+        >
+          {isPlaying ? "🎵" : "🔇"}
+        </button>
       </div>
     </>
   );
