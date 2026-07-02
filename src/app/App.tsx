@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 
-
 const START_DATE = new Date(2026, 5, 14);
 
 function daysSince(start: Date): number {
@@ -57,33 +56,18 @@ function buildFlowers(days: number): FlowerData[] {
   return flowers;
 }
 
-// ─────────────────────────────────────────────────────────────
-// PHOTO GALLERY — HOW TO ADD PHOTOS LATER
-// 1. Put image files in: src/assets/photos/
-//    (e.g. src/assets/photos/us-1.jpg, park-day.png, etc.)
-// 2. That's it. Every image in that folder shows up automatically
-//    below, in a grid that grows to fit however many you add.
-//    No code edits needed — no imports, no array entries.
-// 3. Optional: to give a photo a caption, name the file like
-//    "day-one.jpg" and it'll show as "day one" underneath.
-//    (Just swap dashes/underscores for spaces — edit prettifyName
-//    below if you want different formatting.)
-// ─────────────────────────────────────────────────────────────
-
 interface GardenPhoto {
   src: string;
   caption: string;
 }
-
-const PLACEHOLDER_COLORS = ["#f4a8b8", "#f7c9a8", "#c4a8d4", "#b8d4a8", "#f0b3c4", "#e98ea0"];
 
 function prettifyName(filename: string): string {
   const base = filename.split("/").pop() ?? filename;
   const withoutExt = base.replace(/\.[^/.]+$/, "");
   return withoutExt.replace(/[-_]+/g, " ").trim();
 }
-// Vite auto-imports every image and video in this folder as a URL.
-// Drop new files in src/assets/photos/ and they appear here automatically.
+
+// @ts-ignore - Ignoring the import.meta typescript error so Vite builds smoothly
 const mediaModules = import.meta.glob("../assets/photos/*.{jpg,jpeg,png,webp,gif,mp4,mov,webm}", {
   eager: true,
   import: "default",
@@ -91,10 +75,24 @@ const mediaModules = import.meta.glob("../assets/photos/*.{jpg,jpeg,png,webp,gif
 
 const PHOTOS: GardenPhoto[] = Object.entries(mediaModules)
   .sort(([a], [b]) => a.localeCompare(b))
-  .map(([path, src]) => ({ src, caption: prettifyName(path) }));
-  function PhotoCard({ photo, rotate }: { photo: GardenPhoto; rotate: number }) {
-  // Check if the source file is a video format
-  const isVideo = /\.(mp4|mov|webm)($|\?)/i.test(photo.src) || photo.src.startsWith("data:video/");
+  .map(([path, src]) => {
+    return { 
+      src, 
+      caption: prettifyName(path) 
+    };
+  });
+
+function EmptyGalleryHint() {
+  return (
+    <div style={{ color: "#a8929a", fontStyle: "italic", fontSize: 13, padding: "20px 0" }}>
+      Add some photos or videos to src/assets/photos/ to start making your memories bloom!
+    </div>
+  );
+}
+
+function PhotoCard({ photo, rotate }: { photo: GardenPhoto; rotate: number }) {
+  // This is the check that tells the app if the file is a video or image
+  const isVideo = /\.(mp4|webm|mov|ogg)(\?.*)?$/i.test(photo.src);
 
   return (
     <div
@@ -116,7 +114,7 @@ const PHOTOS: GardenPhoto[] = Object.entries(mediaModules)
           borderRadius: 8,
           overflow: "hidden",
           position: "relative",
-          background: "#f0ede9", // fallback background color
+          background: "#f0ede9",
         }}
       >
         {isVideo ? (
@@ -172,9 +170,6 @@ const BLOOM_COLORS = [
 ];
 
 function GardenSVG({ flowers }: { flowers: FlowerData[] }) {
-  const svgNS = "http://www.w3.org/2000/svg";
-
-  // Generate grass blades
   const grassBlades = Array.from({ length: 38 }, (_, i) => {
     const gx = (i / 37) * 560 + (seededRand(i * 17) - 0.5) * 8;
     const gh = 10 + seededRand(i * 13) * 22;
@@ -200,12 +195,10 @@ function GardenSVG({ flowers }: { flowers: FlowerData[] }) {
         </filter>
       </defs>
 
-      {/* Ground surface highlight */}
       <ellipse cx="280" cy="238" rx="290" ry="18" fill="url(#groundSheen)" />
 
-      {/* Back grass layer (darker, smaller) */}
       {grassBlades.slice(0, 20).map((b, i) => (
-        <g key={`bg-grass-${i}`} style={{ animationDelay: `${b.delay}s` }}>
+        <g key={`bg-grass-${i}`}>
           <path
             d={`M ${b.gx} 240 Q ${b.gx + b.gsway * 0.5} ${240 - b.gh * 0.5} ${b.gx + b.gsway} ${240 - b.gh}`}
             stroke="#4a6b3a"
@@ -219,7 +212,6 @@ function GardenSVG({ flowers }: { flowers: FlowerData[] }) {
         </g>
       ))}
 
-      {/* Flowers */}
       {flowers.map((f, idx) => {
         const baseY = 236;
         const topY = baseY - f.height;
@@ -229,7 +221,6 @@ function GardenSVG({ flowers }: { flowers: FlowerData[] }) {
 
         return (
           <g key={idx} className="flower-group" style={{ animationDelay: `${f.animDelay}s` }}>
-            {/* Stem */}
             <path
               d={`M ${f.x} ${baseY} Q ${ctrlX} ${baseY - f.height * 0.55} ${tipX} ${topY}`}
               stroke="#5d7a4a"
@@ -240,7 +231,6 @@ function GardenSVG({ flowers }: { flowers: FlowerData[] }) {
               className="stem-sway"
             />
 
-            {/* Leaves */}
             {f.height > 45 && (
               <>
                 <path
@@ -256,7 +246,6 @@ function GardenSVG({ flowers }: { flowers: FlowerData[] }) {
               </>
             )}
 
-            {/* Bloom */}
             {f.hasBoom && f.bloomScale > 0 ? (
               <g transform={`translate(${tipX}, ${topY}) scale(${f.bloomScale})`} filter="url(#softBloom)">
                 {f.variety === 0 &&
@@ -326,7 +315,6 @@ function GardenSVG({ flowers }: { flowers: FlowerData[] }) {
         );
       })}
 
-      {/* Front grass layer */}
       {grassBlades.slice(20).map((b, i) => (
         <path
           key={`fg-grass-${i}`}
@@ -341,7 +329,6 @@ function GardenSVG({ flowers }: { flowers: FlowerData[] }) {
         />
       ))}
 
-      {/* Small ground wildflowers */}
       {[80, 200, 350, 470].map((wx, i) => (
         <g key={`wild-${i}`} transform={`translate(${wx}, 230)`}>
           {Array.from({ length: 5 }).map((_, p) => {
@@ -437,6 +424,7 @@ export default function App() {
           background: #faf5f0;
           margin: 0;
           min-height: 100vh;
+          overflow-x: hidden;
         }
 
         @keyframes twinkle {
@@ -480,7 +468,7 @@ export default function App() {
         }
 
         .star-twinkle {
-          animation: twinkle var(--dur, 3s) ease-in-out infinite;
+          animation: twinkle 3s ease-in-out infinite;
         }
 
         .stem-sway {
@@ -529,7 +517,6 @@ export default function App() {
         }}
       >
         <div style={{ width: "100%", maxWidth: 560, textAlign: "center" }}>
-          {/* Eyebrow */}
           <p
             className="fade-up"
             style={{
@@ -545,7 +532,6 @@ export default function App() {
             a garden that grows with us
           </p>
 
-          {/* Title */}
           <h1
             className="fade-up"
             style={{
@@ -561,7 +547,6 @@ export default function App() {
             Aarna and Yuvi&apos;s Garden
           </h1>
 
-          {/* Sub */}
           <p
             className="fade-up"
             style={{
@@ -575,7 +560,6 @@ export default function App() {
             planted {formatDate(START_DATE)}
           </p>
 
-          {/* Garden Scene */}
           <div
             className="fade-up"
             style={{
@@ -588,7 +572,6 @@ export default function App() {
               animationDelay: "0.2s",
             }}
           >
-            {/* Moon */}
             <div
               className="sun-shimmer"
               style={{
@@ -604,7 +587,6 @@ export default function App() {
               }}
             />
 
-            {/* Moon crescent shadow */}
             <div
               style={{
                 position: "absolute",
@@ -618,10 +600,8 @@ export default function App() {
               }}
             />
 
-            {/* Stars */}
             <Stars count={28} />
 
-            {/* Clouds (subtle) */}
             <div
               style={{
                 position: "absolute",
@@ -647,18 +627,10 @@ export default function App() {
               }}
             />
 
-            {/* Butterflies */}
-            {days >= 2 && (
-              <Butterfly x={18} y={38} delay={0.4} color="#f4a8b8" />
-            )}
-            {days >= 8 && (
-              <Butterfly x={62} y={28} delay={1.8} color="#c4a8d4" />
-            )}
-            {days >= 18 && (
-              <Butterfly x={42} y={44} delay={3.1} color="#f7c9a8" />
-            )}
+            {days >= 2 && <Butterfly x={18} y={38} delay={0.4} color="#f4a8b8" />}
+            {days >= 8 && <Butterfly x={62} y={28} delay={1.8} color="#c4a8d4" />}
+            {days >= 18 && <Butterfly x={42} y={44} delay={3.1} color="#f7c9a8" />}
 
-            {/* Ground */}
             <div
               style={{
                 position: "absolute",
@@ -670,7 +642,6 @@ export default function App() {
                 borderRadius: "0 0 20px 20px",
               }}
             >
-              {/* Ground rim highlight */}
               <div
                 style={{
                   position: "absolute",
@@ -684,23 +655,19 @@ export default function App() {
               />
             </div>
 
-            {/* Garden SVG */}
             <GardenSVG flowers={flowers} />
 
-            {/* Scene vignette */}
             <div
               style={{
                 position: "absolute",
                 inset: 0,
                 borderRadius: 20,
-                background:
-                  "radial-gradient(ellipse at center, transparent 50%, rgba(20,10,25,0.25) 100%)",
+                background: "radial-gradient(ellipse at center, transparent 50%, rgba(20,10,25,0.25) 100%)",
                 pointerEvents: "none",
               }}
             />
           </div>
 
-          {/* Stats row */}
           <div
             className="fade-up"
             style={{
@@ -715,7 +682,7 @@ export default function App() {
             {[
               { value: days, label: "days together" },
               { value: flowerCount, label: "blooms" },
-              { value: Math.max(0, days+20), label: "nights I thought of you" },
+              { value: Math.max(0, days + 20), label: "nights I thought of you" },
             ].map((stat) => (
               <div
                 key={stat.label}
@@ -738,7 +705,6 @@ export default function App() {
             ))}
           </div>
 
-          {/* Message card */}
           <div
             className="fade-up"
             style={{
@@ -754,7 +720,6 @@ export default function App() {
               overflow: "hidden",
             }}
           >
-            {/* Decorative petal watermark */}
             <svg
               style={{ position: "absolute", top: -12, right: -12, opacity: 0.07, pointerEvents: "none" }}
               width="120"
@@ -779,27 +744,11 @@ export default function App() {
               <circle cx="60" cy="60" r="10" fill="#e98ea0" />
             </svg>
 
-            <p
-              style={{
-                fontFamily: "'Lora', serif",
-                fontStyle: "italic",
-                fontSize: 14,
-                color: "#a8929a",
-                margin: "0 0 12px",
-              }}
-            >
+            <p style={{ fontFamily: "'Lora', serif", fontStyle: "italic", fontSize: 14, color: "#a8929a", margin: "0 0 12px" }}>
               for Aarna,
             </p>
 
-            <p
-              style={{
-                fontFamily: "'Lora', serif",
-                fontSize: "clamp(20px, 5vw, 26px)",
-                lineHeight: 1.6,
-                margin: 0,
-                color: "#3a2e35",
-              }}
-            >
+            <p style={{ fontFamily: "'Lora', serif", fontSize: "clamp(20px, 5vw, 26px)", lineHeight: 1.6, margin: 0, color: "#3a2e35" }}>
               i loveee you a lott
               <br />
               <span style={{ fontSize: "0.88em", color: "#c46f88" }}>(more than you 😤)</span>
@@ -815,49 +764,21 @@ export default function App() {
                 justifyContent: "space-between",
               }}
             >
-              <span
-                style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 12,
-                  color: "#b8a4ae",
-                  letterSpacing: "0.04em",
-                }}
-              >
+              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "#b8a4ae", letterSpacing: "0.04em" }}>
                 — growing a little more every day
               </span>
               <span style={{ fontSize: 18 }}>🌸</span>
             </div>
           </div>
 
-          {/* Photo gallery */}
-          <div
-            className="fade-up"
-            style={{
-              marginTop: 28,
-              animationDelay: "0.38s",
-            }}
-          >
-            <p
-              style={{
-                fontFamily: "'Lora', serif",
-                fontStyle: "italic",
-                fontSize: 13,
-                color: "#a8929a",
-                margin: "0 0 14px",
-              }}
-            >
+          <div className="fade-up" style={{ marginTop: 28, animationDelay: "0.38s" }}>
+            <p style={{ fontFamily: "'Lora', serif", fontStyle: "italic", fontSize: 13, color: "#a8929a", margin: "0 0 14px" }}>
               little moments
             </p>
             {PHOTOS.length === 0 ? (
               <EmptyGalleryHint />
             ) : (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
-                  gap: 16,
-                }}
-              >
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 16 }}>
                 {PHOTOS.map((photo, i) => (
                   <PhotoCard key={photo.src} photo={photo} rotate={i % 2 === 0 ? -2.5 : 2.5} />
                 ))}
@@ -865,17 +786,7 @@ export default function App() {
             )}
           </div>
 
-          {/* Footer note */}
-          <p
-            className="fade-up"
-            style={{
-              marginTop: 24,
-              fontSize: 11,
-              color: "#c4b0b8",
-              letterSpacing: "0.06em",
-              animationDelay: "0.4s",
-            }}
-          >
+          <p className="fade-up" style={{ marginTop: 24, fontSize: 11, color: "#c4b0b8", letterSpacing: "0.06em", animationDelay: "0.4s" }}>
             a new bloom every few days ✦
           </p>
         </div>

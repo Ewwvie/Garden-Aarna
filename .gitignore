@@ -5,5 +5,4 @@ dist
 node_modules/
 dist/
 .vite/
-*.mp4
 *.mov
