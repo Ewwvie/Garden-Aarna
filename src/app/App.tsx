@@ -2,6 +2,19 @@ import { useEffect, useRef, useState } from "react";
 
 const START_DATE = new Date(2026, 5, 14);
 
+// ✍️ ADD YOUR NEW NOTES HERE! 
+// You can add as many as you want. They will automatically sort with the newest on top.
+const NOTES_DATA = [
+  {
+    id: 1,
+    date: "2026-07-04",
+    occasion: "aise hi ❤️",
+    title: "The most lovable person ever",
+    content: "Aarna you are worhty of all the love on the planet and more, I wish I can do justice to your beautiful soul....I love you sooooo much"
+  },
+ 
+];
+
 function daysSince(start: Date): number {
   const now = new Date();
   const a = new Date(start.getFullYear(), start.getMonth(), start.getDate());
@@ -100,7 +113,7 @@ function PhotoCard({ photo, rotate }: { photo: GardenPhoto; rotate: number }) {
         borderRadius: 12,
         padding: 8,
         paddingBottom: 28,
-        boxShadow: "0 10px 24px -10px rgba(58,46,53,0.22)",
+        boxShadow: "0 10px 24px -10 rgba(58,46,53,0.22)",
         transform: `rotate(${rotate}deg)`,
         transition: "transform 0.25s ease",
         position: "relative",
@@ -414,7 +427,9 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
   
-  // Create persistent, background audio instance untouched by React rendering lifecycle
+  // ⚡ Hash routing state to handle hidden notes page toggle seamlessly
+  const [currentHash, setCurrentHash] = useState(window.location.hash);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -422,24 +437,27 @@ export default function App() {
     audio.loop = true;
     audioRef.current = audio;
 
+    // Listen for hash variations back and forth
+    const handleHashChange = () => {
+      setCurrentHash(window.location.hash);
+    };
+    window.addEventListener("hashchange", handleHashChange);
+
     return () => {
       audio.pause();
+      window.removeEventListener("hashchange", handleHashChange);
     };
   }, []);
 
   const handleEnterGarden = () => {
     if (audioRef.current) {
-      console.log("Attempting synchronous playback context...");
-      // 1. Play first to secure browser user-gesture token smoothly
       audioRef.current.play()
         .then(() => {
-          console.log("Playback successful!");
           setIsPlaying(true);
-          setIsUnlocked(true); // 2. Reveal screen only after token passes
+          setIsUnlocked(true);
         })
         .catch((err) => {
           console.error("Audio block or missing file error details:", err);
-          // Let them enter even if audio file is corrupted or missing 404
           setIsUnlocked(true); 
         });
     } else {
@@ -459,12 +477,33 @@ export default function App() {
     }
   };
 
+  // Sort notes so latest entries appear on top
+  const sortedNotes = [...NOTES_DATA].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         * { box-sizing: border-box; }
+
+        /* 🎨 FIGMA DESIGN TOKENS FOR THE PRIVATE NOTES PAGE */
+        /* You can map out changes from Figma straight into these tokens! */
+        :root {
+          --notes-page-bg: #faf5f0;           /* Background of the note view canvas */
+          --note-card-bg: #ffffff;            /* Background color of individual cards */
+          --note-card-radius: 20px;           /* Rounded corner styling from Figma */
+          --note-card-padding: 24px;          /* Auto Layout inner spacing padding */
+          --note-card-border: 1px solid rgba(196, 111, 136, 0.15);
+          --note-card-shadow: 0 10px 25px -10px rgba(58,46,53,0.08);
+
+          /* Typography Tokens */
+          --note-title-color: #3a2e35;
+          --note-accent-rgb: 196, 111, 136;   /* Theme highlight accent color (#c46f88) */
+          --note-body-color: #615058;
+        }
 
         body {
           font-family: 'DM Sans', sans-serif;
@@ -539,6 +578,61 @@ export default function App() {
         .fade-up { animation: fadeUp 0.7s ease-out both; }
         .sun-shimmer { animation: shimmer 4s ease-in-out infinite; }
         .music-playing { animation: pulseMusic 2s infinite ease-in-out; }
+
+        /* Notes Section Specific Component Layout Styles */
+        .notes-view-container {
+          max-width: 560px;
+          width: 100%;
+          margin: 0 auto;
+          padding: 40px 16px 64px;
+        }
+        .note-card-item {
+          background-color: var(--note-card-bg);
+          border-radius: var(--note-card-radius);
+          padding: var(--note-card-padding);
+          border: var(--note-card-border);
+          box-shadow: var(--note-card-shadow);
+          text-align: left;
+          margin-bottom: 24px;
+        }
+        .note-card-item:hover {
+          transform: translateY(-2px);
+          transition: transform 0.2s ease;
+        }
+        .note-meta-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 14px;
+        }
+        .note-badge-occasion {
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          color: rgb(var(--note-accent-rgb));
+          background: rgba(var(--note-accent-rgb), 0.08);
+          padding: 4px 10px;
+          borderRadius: 99px;
+        }
+        .note-timestamp {
+          font-size: 12px;
+          color: #a8929a;
+        }
+        .note-card-headline {
+          font-family: 'Lora', serif;
+          font-weight: 600;
+          font-size: 20px;
+          color: var(--note-title-color);
+          margin: 0 0 10px 0;
+        }
+        .note-card-body-text {
+          font-size: 14px;
+          line-height: 1.6;
+          color: var(--note-body-color);
+          margin: 0;
+          white-space: pre-line;
+        }
       `}</style>
 
       {/* Entry Gate Overlay */}
@@ -613,218 +707,295 @@ export default function App() {
         </div>
       )}
 
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "linear-gradient(160deg, #faf5f0 0%, #f5ede8 100%)",
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "center",
-          padding: "40px 16px 64px",
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: 560, textAlign: "center" }}>
-          <p
-            className="fade-up"
-            style={{
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: 11,
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              color: "#a8929a",
-              margin: "0 0 8px",
-              animationDelay: "0.05s",
-            }}
-          >
-            a garden that grows with us
-          </p>
-
-          <h1
-            className="fade-up"
-            style={{
-              fontFamily: "'Lora', serif",
-              fontWeight: 600,
-              fontSize: "clamp(32px, 8vw, 44px)",
-              margin: "0 0 6px",
-              color: "#3a2e35",
-              letterSpacing: "-0.01em",
-              animationDelay: "0.1s",
-            }}
-          >
-            Aarna and Yuvi&apos;s Garden
-          </h1>
-
-          <p
-            className="fade-up"
-            style={{
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: 13,
-              color: "#a8929a",
-              margin: "0 0 28px",
-              animationDelay: "0.15s",
-            }}
-          >
-            planted {formatDate(START_DATE)}
-          </p>
-
-          <div
-            className="fade-up"
-            style={{
-              position: "relative",
-              borderRadius: 20,
-              overflow: "hidden",
-              height: 400,
-              background: "linear-gradient(180deg, #2e2240 0%, #5c3d5a 30%, #a9748a 58%, #c8936a 72%, #4b5a3a 72%)",
-              boxShadow: "0 24px 60px -20px rgba(58,46,53,0.4), 0 4px 16px -4px rgba(58,46,53,0.15)",
-              animationDelay: "0.2s",
-            }}
-          >
-            <div
-              className="sun-shimmer"
-              style={{
-                position: "absolute",
-                top: 22,
-                right: 28,
-                width: 52,
-                height: 52,
-                borderRadius: "50%",
-                background: "radial-gradient(circle at 35% 30%, #fef3d0, #f2c97a 60%, #e0a855 100%)",
-                boxShadow: "0 0 30px 12px rgba(242,201,122,0.22), 0 0 60px 24px rgba(242,201,122,0.08)",
-                filter: "blur(0.3px)",
-              }}
-            />
-
-            <div
-              style={{
-                position: "absolute",
-                top: 22,
-                right: 28,
-                width: 52,
-                height: 52,
-                borderRadius: "50%",
-                background: "radial-gradient(circle at 65% 38%, rgba(58,35,55,0.55) 30%, transparent 65%)",
-                zIndex: 1,
-              }}
-            />
-
-            <Stars count={28} />
-
-            <div style={{ position: "absolute", top: 55, left: "8%", width: 90, height: 28, borderRadius: 20, background: "rgba(255,255,255,0.06)", filter: "blur(6px)" }} />
-            <div style={{ position: "absolute", top: 42, left: "22%", width: 55, height: 18, borderRadius: 20, background: "rgba(255,255,255,0.04)", filter: "blur(4px)" }} />
-
-            {days >= 2 && <Butterfly x={18} y={38} delay={0.4} color="#f4a8b8" />}
-            {days >= 8 && <Butterfly x={62} y={28} delay={1.8} color="#c4a8d4" />}
-            {days >= 18 && <Butterfly x={42} y={44} delay={3.1} color="#f7c9a8" />}
-
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: "42%",
-                background: "linear-gradient(180deg, #4b5a3a 0%, #3a4730 100%)",
-                borderRadius: "0 0 20px 20px",
-              }}
-            >
-              <div style={{ position: "absolute", top: -1, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, transparent, rgba(150,190,110,0.35), rgba(120,160,80,0.4), rgba(150,190,110,0.35), transparent)", filter: "blur(1px)" }} />
-            </div>
-
-            <GardenSVG flowers={flowers} />
-
-            <div style={{ position: "absolute", inset: 0, borderRadius: 20, background: "radial-gradient(ellipse at center, transparent 50%, rgba(20,10,25,0.25) 100%)", pointerEvents: "none" }} />
-          </div>
-
-          <div
-            className="fade-up"
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: 10,
-              margin: "20px 0 6px",
-              flexWrap: "wrap",
-              animationDelay: "0.3s",
-            }}
-          >
-            {[
-              { value: days, label: "days together" },
-              { value: flowerCount, label: "blooms" },
-              { value: Math.max(0, days + 20), label: "nights I thought of you" },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                style={{
-                  background: "rgba(255,255,255,0.85)",
-                  backdropFilter: "blur(8px)",
-                  border: "1px solid rgba(196,111,136,0.18)",
-                  borderRadius: 999,
-                  padding: "9px 18px",
-                  fontSize: 13,
-                  color: "#8a7580",
-                  display: "flex",
+      {/* 🔮 SECONDARY ROUTE: ISOLATED PRIVATE NOTES PAGE */}
+      {currentHash === "#notes" ? (
+        <div style={{ minHeight: "100vh", backgroundColor: "var(--notes-page-bg)", display: "flex", justifyContent: "center" }}>
+          <div className="notes-view-container fade-up">
+            <div style={{ textAlign: "left", marginBottom: 32 }}>
+              <a 
+                href="#" 
+                style={{ 
+                  textDecoration: "none", 
+                  color: "#a8929a", 
+                  fontSize: 13, 
+                  fontWeight: 500,
+                  display: "inline-flex",
                   alignItems: "center",
-                  gap: 5,
+                  gap: 4
                 }}
               >
-                <strong style={{ color: "#3a2e35", fontWeight: 600 }}>{stat.value}</strong>
-                &nbsp;{stat.label}
-              </div>
-            ))}
-          </div>
+                ← Back to Garden
+              </a>
+            </div>
 
-          <div
-            className="fade-up"
-            style={{
-              marginTop: 28,
-              background: "rgba(255,255,255,0.9)",
-              backdropFilter: "blur(12px)",
-              borderRadius: 20,
-              padding: "32px 32px 28px",
-              border: "1px solid rgba(196,111,136,0.15)",
-              boxShadow: "0 8px 32px -8px rgba(196,111,136,0.12)",
-              animationDelay: "0.35s",
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
-            <p style={{ fontFamily: "'Lora', serif", fontStyle: "italic", fontSize: 14, color: "#a8929a", margin: "0 0 12px" }}>
-              for Aarna,
-            </p>
+            <header style={{ textAlign: "center", marginBottom: 44 }}>
+              <span style={{ fontSize: 32 }}>✍️</span>
+              <h1 style={{ fontFamily: "'Lora', serif", color: "var(--note-title-color)", margin: "8px 0 4px", fontWeight: 600, fontSize: 32 }}>
+                Notes for Aarna
+              </h1>
+              <p style={{ color: "#a8929a", fontSize: 13, margin: 0 }}>Little messages saved for special moments.</p>
+            </header>
 
-            <p style={{ fontFamily: "'Lora', serif", fontSize: "clamp(20px, 5vw, 26px)", lineHeight: 1.6, margin: 0, color: "#3a2e35" }}>
-              i loveee you a lott
-              <br />
-              <span style={{ fontSize: "0.88em", color: "#c46f88" }}>(more than you 😤)</span>
-            </p>
-
-            <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(196,111,136,0.12)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "#b8a4ae", letterSpacing: "0.04em" }}>
-                — growing a little more every day
-              </span>
-              <span style={{ fontSize: 18 }}>🌸</span>
+            <div>
+              {sortedNotes.map((note) => (
+                <article key={note.id} className="note-card-item">
+                  <div className="note-meta-row">
+                    <span className="note-badge-occasion">{note.occasion}</span>
+                    <time className="note-timestamp">
+                      {new Date(note.date).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric"
+                      })}
+                    </time>
+                  </div>
+                  <h2 className="note-card-headline">{note.title}</h2>
+                  <p className="note-card-body-text">{note.content}</p>
+                </article>
+              ))}
             </div>
           </div>
-
-          <div className="fade-up" style={{ marginTop: 28, animationDelay: "0.38s" }}>
-            <p style={{ fontFamily: "'Lora', serif", fontStyle: "italic", fontSize: 13, color: "#a8929a", margin: "0 0 14px" }}>
-              little moments
-            </p>
-            {PHOTOS.length === 0 ? (
-              <EmptyGalleryHint />
-            ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 16 }}>
-                {PHOTOS.map((photo, i) => (
-                  <PhotoCard key={photo.src} photo={photo} rotate={i % 2 === 0 ? -2.5 : 2.5} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          <p className="fade-up" style={{ marginTop: 24, fontSize: 11, color: "#c4b0b8", letterSpacing: "0.06em", animationDelay: "0.4s" }}>
-            a new bloom every few days ✦
-          </p>
         </div>
-      </div>
+      ) : (
+        /* 🏡 PRIMARY ROUTE: MAIN SITE GARDEN VIEW */
+        <div
+          style={{
+            minHeight: "100vh",
+            background: "linear-gradient(160deg, #faf5f0 0%, #f5ede8 100%)",
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "center",
+            padding: "40px 16px 64px",
+          }}
+        >
+          <div style={{ width: "100%", maxWidth: 560, textAlign: "center" }}>
+            <p
+              className="fade-up"
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 11,
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "#a8929a",
+                margin: "0 0 8px",
+                animationDelay: "0.05s",
+              }}
+            >
+              a garden that grows with us
+            </p>
+
+            <h1
+              className="fade-up"
+              style={{
+                fontFamily: "'Lora', serif",
+                fontWeight: 600,
+                fontSize: "clamp(32px, 8vw, 44px)",
+                margin: "0 0 6px",
+                color: "#3a2e35",
+                letterSpacing: "-0.01em",
+                animationDelay: "0.1s",
+              }}
+            >
+              Aarna and Yuvi&apos;s Garden
+            </h1>
+
+            <p
+              className="fade-up"
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 13,
+                color: "#a8929a",
+                margin: "0 0 28px",
+                animationDelay: "0.15s",
+              }}
+            >
+              planted {formatDate(START_DATE)}
+            </p>
+
+            <div
+              className="fade-up"
+              style={{
+                position: "relative",
+                borderRadius: 20,
+                overflow: "hidden",
+                height: 400,
+                background: "linear-gradient(180deg, #2e2240 0%, #5c3d5a 30%, #a9748a 58%, #c8936a 72%, #4b5a3a 72%)",
+                boxShadow: "0 24px 60px -20px rgba(58,46,53,0.4), 0 4px 16px -4px rgba(58,46,53,0.15)",
+                animationDelay: "0.2s",
+              }}
+            >
+              <div
+                className="sun-shimmer"
+                style={{
+                  position: "absolute",
+                  top: 22,
+                  right: 28,
+                  width: 52,
+                  height: 52,
+                  borderRadius: "50%",
+                  background: "radial-gradient(circle at 35% 30%, #fef3d0, #f2c97a 60%, #e0a855 100%)",
+                  boxShadow: "0 0 30px 12px rgba(242,201,122,0.22), 0 0 60px 24px rgba(242,201,122,0.08)",
+                  filter: "blur(0.3px)",
+                }}
+              />
+
+              <div
+                style={{
+                  position: "absolute",
+                  top: 22,
+                  right: 28,
+                  width: 52,
+                  height: 52,
+                  borderRadius: "50%",
+                  background: "radial-gradient(circle at 65% 38%, rgba(58,35,55,0.55) 30%, transparent 65%)",
+                  zIndex: 1,
+                }}
+              />
+
+              <Stars count={28} />
+
+              <div style={{ position: "absolute", top: 55, left: "8%", width: 90, height: 28, borderRadius: 20, background: "rgba(255,255,255,0.06)", filter: "blur(6px)" }} />
+              <div style={{ position: "absolute", top: 42, left: "22%", width: 55, height: 18, borderRadius: 20, background: "rgba(255,255,255,0.04)", filter: "blur(4px)" }} />
+
+              {days >= 2 && <Butterfly x={18} y={38} delay={0.4} color="#f4a8b8" />}
+              {days >= 8 && <Butterfly x={62} y={28} delay={1.8} color="#c4a8d4" />}
+              {days >= 18 && <Butterfly x={42} y={44} delay={3.1} color="#f7c9a8" />}
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: "42%",
+                  background: "linear-gradient(180deg, #4b5a3a 0%, #3a4730 100%)",
+                  borderRadius: "0 0 20px 20px",
+                }}
+              >
+                <div style={{ position: "absolute", top: -1, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, transparent, rgba(150,190,110,0.35), rgba(120,160,80,0.4), rgba(150,190,110,0.35), transparent)", filter: "blur(1px)" }} />
+              </div>
+
+              <GardenSVG flowers={flowers} />
+
+              <div style={{ position: "absolute", inset: 0, borderRadius: 20, background: "radial-gradient(ellipse at center, transparent 50%, rgba(20,10,25,0.25) 100%)", pointerEvents: "none" }} />
+            </div>
+
+            <div
+              className="fade-up"
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: 10,
+                margin: "20px 0 6px",
+                flexWrap: "wrap",
+                animationDelay: "0.3s",
+              }}
+            >
+              {[
+                { value: days, label: "days together" },
+                { value: flowerCount, label: "blooms" },
+                { value: Math.max(0, days + 20), label: "nights I thought of you" },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  style={{
+                    background: "rgba(255,255,255,0.85)",
+                    backdropFilter: "blur(8px)",
+                    border: "1px solid rgba(196,111,136,0.18)",
+                    borderRadius: 999,
+                    padding: "9px 18px",
+                    fontSize: 13,
+                    color: "#8a7580",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                  }}
+                >
+                  <strong style={{ color: "#3a2e35", fontWeight: 600 }}>{stat.value}</strong>
+                  &nbsp;{stat.label}
+                </div>
+              ))}
+            </div>
+
+            <div
+              className="fade-up"
+              style={{
+                marginTop: 28,
+                background: "rgba(255,255,255,0.9)",
+                backdropFilter: "blur(12px)",
+                borderRadius: 20,
+                padding: "32px 32px 28px",
+                border: "1px solid rgba(196,111,136,0.15)",
+                boxShadow: "0 8px 32px -8px rgba(196,111,136,0.12)",
+                animationDelay: "0.35s",
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
+              <p style={{ fontFamily: "'Lora', serif", fontStyle: "italic", fontSize: 14, color: "#a8929a", margin: "0 0 12px" }}>
+                for Aarna,
+              </p>
+
+              <p style={{ fontFamily: "'Lora', serif", fontSize: "clamp(20px, 5vw, 26px)", lineHeight: 1.6, margin: 0, color: "#3a2e35" }}>
+                i loveee you a lott
+                <br />
+                <span style={{ fontSize: "0.88em", color: "#c46f88" }}>(more than you 😤)</span>
+              </p>
+
+              {/* 🚪 HERE IS THE NEW HANDY LINK TO ENTER THE NOTES VIEW */}
+              <div style={{ marginTop: 18 }}>
+                <a 
+                  href="#notes" 
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    background: "rgba(196, 111, 136, 0.08)",
+                    border: "1px solid rgba(196, 111, 136, 0.2)",
+                    padding: "8px 18px",
+                    borderRadius: 99,
+                    fontSize: 12,
+                    color: "#c46f88",
+                    textDecoration: "none",
+                    fontWeight: 500,
+                    transition: "all 0.2s ease-in-out"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(196, 111, 136, 0.15)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(196, 111, 136, 0.08)"}
+                >
+                  Read special notes for you 📝✨
+                </a>
+              </div>
+
+              <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(196,111,136,0.12)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "#b8a4ae", letterSpacing: "0.04em" }}>
+                  — growing a little more every day
+                </span>
+                <span style={{ fontSize: 18 }}>🌸</span>
+              </div>
+            </div>
+
+            <div className="fade-up" style={{ marginTop: 28, animationDelay: "0.38s" }}>
+              <p style={{ fontFamily: "'Lora', serif", fontStyle: "italic", fontSize: 13, color: "#a8929a", margin: "0 0 14px" }}>
+                little moments
+              </p>
+              {PHOTOS.length === 0 ? (
+                <EmptyGalleryHint />
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 16 }}>
+                  {PHOTOS.map((photo, i) => (
+                    <PhotoCard key={photo.src} photo={photo} rotate={i % 2 === 0 ? -2.5 : 2.5} />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <p className="fade-up" style={{ marginTop: 24, fontSize: 11, color: "#c4b0b8", letterSpacing: "0.06em", animationDelay: "0.4s" }}>
+              a new bloom every few days ✦
+          </p>
+          </div>
+        </div>
+      )}
 
       {/* Floating Music Toggle Button */}
       <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 9999 }}>

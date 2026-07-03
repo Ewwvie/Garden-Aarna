@@ -1,0 +1,102 @@
+/* Figma Design Tokens */
+:root {
+  --notes-bg-color: #faf6f6;        /* Clean canvas background color for the page */
+  --note-card-bg: #ffffff;
+  --note-card-radius: 20px;
+  --note-card-padding: 28px;
+  --note-card-border: 1px solid #f0e4e4;
+  --note-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+
+  /* Typography */
+  --note-title-color: #2c2c2c;
+  --note-accent-color: #e07a5f;     /* Use whatever thematic color you pick in Figma */
+  --note-body-color: #5c5c5c;
+}
+
+/* Page Wrapper overrides main styles to keep it clean */
+.notes-page-wrapper {
+  background-color: var(--notes-bg-color);
+  min-height: 100vh;
+  width: 100%;
+  font-family: sans-serif;
+  padding-bottom: 60px;
+}
+
+.notes-nav {
+  padding: 20px 40px;
+}
+
+.back-btn {
+  text-decoration: none;
+  color: var(--note-body-color);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.back-btn:hover {
+  color: var(--note-accent-color);
+}
+
+.notes-page-header {
+  text-align: center;
+  margin-top: 40px;
+  margin-bottom: 60px;
+}
+
+.notes-page-header h1 {
+  color: var(--note-title-color);
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.notes-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.notes-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* Individual Card Styles matching Figma */
+.note-card {
+  background-color: var(--note-card-bg);
+  border-radius: var(--note-card-radius);
+  padding: var(--note-card-padding);
+  border: var(--note-card-border);
+  box-shadow: var(--note-shadow);
+}
+
+.note-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+}
+
+.note-occasion {
+  color: var(--note-accent-color);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.note-date {
+  color: #a0a0a0;
+}
+
+.note-title {
+  color: var(--note-title-color);
+  margin: 0 0 12px 0;
+  font-size: 1.4rem;
+}
+
+.note-content {
+  color: var(--note-body-color);
+  line-height: 1.7;
+  white-space: pre-line;
+}
