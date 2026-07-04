@@ -4,13 +4,9 @@ const START_DATE = new Date(2026, 5, 14);
 
 // 🎵 SONGS
 const GARDEN_SONG_URL = "https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/98%20Ek%20Ajnabee%20Haseena%20Se%20-%20PagalNew.mp3";
-const NOTES_SONG_URL = "PASTE_YOUR_NOTES_SONG_SUPABASE_URL_HERE"; // 🎵 add later — song that plays on the notes page
+const NOTES_SONG_URL = "https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/Bryan%20Adams%20-%20Heaven.mp3";
 
-// 🎈 BIRTHDAY MODE
-// "auto" -> turns on/off automatically based on the date below
-// "on"   -> force it on right now (great for testing before the day)
-// "off"  -> force it off even if the date matches (great for turning it off early/late)
-const FEATURES = {
+
   birthdayMode: "auto" as "auto" | "on" | "off",
 };
 
@@ -35,7 +31,7 @@ const NOTES_DATA = [
     date: "2026-07-04",
     occasion: "aise hi ❤️",
     title: "The most lovable person ever",
-    content: "Aarna you are worhty of all the love on the planet and more, I wish I can do justice to your beautiful soul....I love you sooooo much"
+    content: "Aarna you are worthy of all the love on the planet and more, I wish I can do justice to your beautiful soul....I love you sooooo much"
   },
  
 ];
