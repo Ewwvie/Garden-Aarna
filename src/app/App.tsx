@@ -4,7 +4,28 @@ const START_DATE = new Date(2026, 5, 14);
 
 // 🎵 SONGS
 const GARDEN_SONG_URL = "https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/98%20Ek%20Ajnabee%20Haseena%20Se%20-%20PagalNew.mp3";
-const NOTES_SONG_URL = "https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/Bryan%20Adams%20-%20Heaven.mp3"; 
+const NOTES_SONG_URL = "PASTE_YOUR_NOTES_SONG_SUPABASE_URL_HERE"; // 🎵 add later — song that plays on the notes page
+
+// 🎈 BIRTHDAY MODE
+// "auto" -> turns on/off automatically based on the date below
+// "on"   -> force it on right now (great for testing before the day)
+// "off"  -> force it off even if the date matches (great for turning it off early/late)
+const FEATURES = {
+  birthdayMode: "auto" as "auto" | "on" | "off",
+};
+
+function isBirthdayWindow(): boolean {
+  const now = new Date();
+  const start = new Date(2026, 9, 4, 0, 0, 0);  // midnight, Oct 4 2026
+  const end = new Date(2026, 9, 5, 0, 0, 0);    // midnight, Oct 5 2026 (i.e. all day Oct 4)
+  return now >= start && now < end;
+}
+
+function isBirthdayModeActive(): boolean {
+  if (FEATURES.birthdayMode === "on") return true;
+  if (FEATURES.birthdayMode === "off") return false;
+  return isBirthdayWindow();
+}
 
 // ✍️ ADD YOUR NEW NOTES HERE! 
 // You can add as many as you want. They will automatically sort with the newest on top.
@@ -450,10 +471,176 @@ function Butterfly({ x, y, delay, color }: { x: number; y: number; delay: number
   );
 }
 
+function BirthdayOverlay() {
+  const balloons = Array.from({ length: 16 }, (_, i) => ({
+    left: seededRand(i * 19) * 96 + 2,
+    delay: seededRand(i * 31) * 6,
+    duration: 7 + seededRand(i * 41) * 4,
+    scale: 0.8 + seededRand(i * 53) * 0.6,
+    color: ["#f4a8b8", "#f7c9a8", "#c4a8d4", "#b8d4a8", "#f6e2b8", "#f0b3c4"][i % 6],
+  }));
+
+  const confetti = Array.from({ length: 40 }, (_, i) => ({
+    left: seededRand(i * 61) * 100,
+    delay: seededRand(i * 71) * 5,
+    duration: 4 + seededRand(i * 83) * 3,
+    size: 5 + seededRand(i * 91) * 5,
+    color: ["#f4a8b8", "#f7c9a8", "#c4a8d4", "#b8d4a8", "#f6e2b8", "#e98ea0", "#d4b8e0"][i % 7],
+    shape: i % 3,
+  }));
+
+  const streamerColors = ["#f4a8b8", "#f7c9a8", "#c4a8d4", "#b8d4a8", "#f6e2b8", "#e98ea0"];
+
+  return (
+    <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 9998, overflow: "hidden" }}>
+      {/* Streamers hanging from the top corners */}
+      {[8, 22, 78, 92].map((left, i) => (
+        <svg
+          key={`streamer-${i}`}
+          width="4"
+          height="220"
+          viewBox="0 0 4 220"
+          style={{ position: "absolute", top: 0, left: `${left}%`, opacity: 0.8 }}
+          className="streamer-sway"
+        >
+          <path
+            d="M2 0 Q -8 40 2 80 Q 12 120 2 160 Q -6 190 2 220"
+            stroke={streamerColors[i % streamerColors.length]}
+            strokeWidth="4"
+            fill="none"
+            strokeLinecap="round"
+          />
+        </svg>
+      ))}
+
+      {/* Bunting / flag banner across the very top */}
+      <svg
+        width="100%"
+        height="60"
+        viewBox="0 0 560 60"
+        preserveAspectRatio="none"
+        style={{ position: "absolute", top: 0, left: 0, width: "100%" }}
+      >
+        <path d="M0 6 Q 280 40 560 6" stroke="#c46f88" strokeWidth="2" fill="none" opacity="0.5" />
+        {Array.from({ length: 13 }).map((_, i) => {
+          const t = i / 12;
+          const x = t * 560;
+          const y = 6 + Math.sin(t * Math.PI) * 34;
+          return (
+            <path
+              key={i}
+              d={`M ${x} ${y} L ${x - 11} ${y + 22} L ${x + 11} ${y + 22} Z`}
+              fill={streamerColors[i % streamerColors.length]}
+              opacity="0.9"
+            />
+          );
+        })}
+      </svg>
+
+      {/* Falling confetti */}
+      {confetti.map((c, i) => (
+        <div
+          key={`confetti-${i}`}
+          className="confetti-fall"
+          style={{
+            position: "absolute",
+            left: `${c.left}%`,
+            top: "-20px",
+            width: c.size,
+            height: c.size,
+            background: c.color,
+            borderRadius: c.shape === 0 ? "50%" : c.shape === 1 ? "2px" : "0",
+            transform: c.shape === 2 ? "rotate(45deg)" : "none",
+            animationDelay: `${c.delay}s`,
+            animationDuration: `${c.duration}s`,
+            opacity: 0.9,
+          }}
+        />
+      ))}
+
+      {/* Rising balloons */}
+      {balloons.map((b, i) => (
+        <div
+          key={`balloon-${i}`}
+          className="balloon-float"
+          style={{
+            position: "absolute",
+            left: `${b.left}%`,
+            bottom: "-140px",
+            animationDelay: `${b.delay}s`,
+            animationDuration: `${b.duration}s`,
+            transform: `scale(${b.scale})`,
+          }}
+        >
+          <svg width="36" height="50" viewBox="0 0 36 50" fill="none">
+            <ellipse cx="18" cy="18" rx="16" ry="18" fill={b.color} opacity="0.9" />
+            <ellipse cx="13" cy="12" rx="4" ry="5" fill="rgba(255,255,255,0.4)" />
+            <path d="M18 36 L15 40 L21 40 Z" fill={b.color} opacity="0.9" />
+            <line x1="18" y1="40" x2="18" y2="50" stroke="#a8929a" strokeWidth="1" />
+          </svg>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BirthdayBanner() {
+  return (
+    <div
+      className="fade-up birthday-banner-pulse"
+      style={{
+        position: "relative",
+        display: "block",
+        background: "linear-gradient(135deg, #f4a8b8 0%, #f7c9a8 35%, #c4a8d4 70%, #f0b3c4 100%)",
+        borderRadius: 24,
+        padding: "26px 24px",
+        margin: "0 0 28px",
+        boxShadow: "0 16px 40px -12px rgba(196,111,136,0.45)",
+        border: "1px solid rgba(255,255,255,0.4)",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35), transparent 50%)",
+          pointerEvents: "none",
+        }}
+      />
+      <div style={{ fontSize: 40, marginBottom: 6, letterSpacing: 4 }}>🎉🎂🎈</div>
+      <h2
+        style={{
+          fontFamily: "'Lora', serif",
+          fontWeight: 700,
+          fontSize: "clamp(24px, 6vw, 34px)",
+          color: "#fff",
+          margin: "0 0 6px",
+          textShadow: "0 2px 12px rgba(58,46,53,0.25)",
+        }}
+      >
+        Happy Birthday Aarna!❤️❤️❤️
+      </h2>
+      <p
+        style={{
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: 14,
+          color: "rgba(255,255,255,0.95)",
+          margin: 0,
+          textShadow: "0 1px 8px rgba(58,46,53,0.2)",
+        }}
+      >
+        the whole garden is celebrating you today ✨
+      </p>
+    </div>
+  );
+}
+
 export default function App() {
   const days = daysSince(START_DATE);
   const flowers = buildFlowers(days);
   const flowerCount = flowers.filter((f) => f.hasBoom).length;
+  const birthdayActive = isBirthdayModeActive();
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -638,6 +825,33 @@ export default function App() {
         .sun-shimmer { animation: shimmer 4s ease-in-out infinite; }
         .music-playing { animation: pulseMusic 2s infinite ease-in-out; }
 
+        @keyframes balloonFloat {
+          0% { transform: translateY(0) translateX(0); opacity: 0; }
+          8% { opacity: 0.9; }
+          50% { transform: translateY(-60vh) translateX(12px); }
+          100% { transform: translateY(-130vh) translateX(-10px); opacity: 0.8; }
+        }
+        .balloon-float { animation: balloonFloat linear infinite; }
+
+        @keyframes confettiFall {
+          0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+          10% { opacity: 1; }
+          100% { transform: translateY(110vh) rotate(360deg); opacity: 0.9; }
+        }
+        .confetti-fall { animation: confettiFall linear infinite; }
+
+        @keyframes streamerSway {
+          0%, 100% { transform: rotate(0deg); }
+          50% { transform: rotate(4deg); }
+        }
+        .streamer-sway { animation: streamerSway 3s ease-in-out infinite; transform-origin: top center; }
+
+        @keyframes bannerPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.015); }
+        }
+        .birthday-banner-pulse { animation: bannerPulse 3s ease-in-out infinite; }
+
         /* Notes Section Specific Component Layout Styles */
         .notes-view-container {
           max-width: 560px;
@@ -765,8 +979,7 @@ export default function App() {
           </div>
         </div>
       )}
-
-      {/* 🔮 SECONDARY ROUTE: ISOLATED PRIVATE NOTES PAGE */}
+      {birthdayActive && <BirthdayOverlay />}
       {currentHash === "#notes" ? (
         <div style={{ minHeight: "100vh", backgroundColor: "var(--notes-page-bg)", display: "flex", justifyContent: "center" }}>
           <div className="notes-view-container fade-up">
@@ -828,6 +1041,8 @@ export default function App() {
           }}
         >
           <div style={{ width: "100%", maxWidth: 560, textAlign: "center" }}>
+            {birthdayActive && <BirthdayBanner />}
+
             <p
               className="fade-up"
               style={{
