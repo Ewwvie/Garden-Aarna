@@ -4,9 +4,9 @@ const START_DATE = new Date(2026, 5, 14);
 
 // 🎵 SONGS
 const GARDEN_SONG_URL = "https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/98%20Ek%20Ajnabee%20Haseena%20Se%20-%20PagalNew.mp3";
-const NOTES_SONG_URL = "https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/Bryan%20Adams%20-%20Heaven.mp3";
+const NOTES_SONG_URL = "https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/Bryan%20Adams%20-%20Heaven.mp3"; 
 
-
+const FEATURES = {
   birthdayMode: "auto" as "auto" | "on" | "off",
 };
 
