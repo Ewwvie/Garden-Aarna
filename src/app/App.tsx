@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from "react";
 
 const START_DATE = new Date(2026, 5, 14);
 
+// 🎵 SONGS
+const GARDEN_SONG_URL = "https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/98%20Ek%20Ajnabee%20Haseena%20Se%20-%20PagalNew.mp3";
+const NOTES_SONG_URL = "https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/Bryan%20Adams%20-%20Heaven.mp3"; 
+
 // ✍️ ADD YOUR NEW NOTES HERE! 
 // You can add as many as you want. They will automatically sort with the newest on top.
 const NOTES_DATA = [
@@ -457,12 +461,18 @@ export default function App() {
   // ⚡ Hash routing state to handle hidden notes page toggle seamlessly
   const [currentHash, setCurrentHash] = useState(window.location.hash);
 
+  // 🎵 Two separate tracks — one for the garden, one for the notes page
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const notesAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const audio = new Audio("https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/98%20Ek%20Ajnabee%20Haseena%20Se%20-%20PagalNew.mp3");
+    const audio = new Audio(GARDEN_SONG_URL);
     audio.loop = true;
     audioRef.current = audio;
+
+    const notesAudio = new Audio(NOTES_SONG_URL);
+    notesAudio.loop = true;
+    notesAudioRef.current = notesAudio;
 
     // Listen for hash variations back and forth
     const handleHashChange = () => {
@@ -472,13 +482,34 @@ export default function App() {
 
     return () => {
       audio.pause();
+      notesAudio.pause();
       window.removeEventListener("hashchange", handleHashChange);
     };
   }, []);
 
+  // Helper: whichever track matches the page we're currently on
+  const getActiveAudio = () => (currentHash === "#notes" ? notesAudioRef.current : audioRef.current);
+
+  // When the page (hash) changes, pause the track that's no longer relevant
+  // and, if music is on, start playing the one for the new page.
+  useEffect(() => {
+    if (!isUnlocked) return;
+
+    const active = currentHash === "#notes" ? notesAudioRef.current : audioRef.current;
+    const inactive = currentHash === "#notes" ? audioRef.current : notesAudioRef.current;
+
+    inactive?.pause();
+
+    if (isPlaying && active) {
+      active.play().catch((err) => console.error("Track switch error:", err));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentHash, isUnlocked]);
+
   const handleEnterGarden = () => {
-    if (audioRef.current) {
-      audioRef.current.play()
+    const active = getActiveAudio();
+    if (active) {
+      active.play()
         .then(() => {
           setIsPlaying(true);
           setIsUnlocked(true);
@@ -493,12 +524,13 @@ export default function App() {
   };
 
   const toggleMusic = () => {
-    if (!audioRef.current) return;
+    const active = getActiveAudio();
+    if (!active) return;
     if (isPlaying) {
-      audioRef.current.pause();
+      active.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play()
+      active.play()
         .then(() => setIsPlaying(true))
         .catch((err) => console.error("Toggle block error:", err));
     }
