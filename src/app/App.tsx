@@ -86,7 +86,7 @@ const mediaModules = import.meta.glob("../assets/photos/*.{jpg,jpeg,png,webp,gif
   import: "default",
 }) as Record<string, string>;
 
-const PHOTOS: GardenPhoto[] = Object.entries(mediaModules)
+const LOCAL_MEDIA = Object.entries(mediaModules)
   .sort(([a], [b]) => a.localeCompare(b))
   .map(([path, src]) => {
     return { 
@@ -95,6 +95,33 @@ const PHOTOS: GardenPhoto[] = Object.entries(mediaModules)
     };
   });
 
+const PHOTOS: GardenPhoto[] = [
+  // 🍿 PASTE YOUR SUPABASE/S3 LINKS HERE!
+  {
+    src: "https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/Ambala.webm",
+    caption: "Ambala"
+  },
+  {
+    src: "https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/first-event%20copy.webm",
+    caption: "First event together"
+  },
+   {
+    src: "https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/sun%20wasnt%20the%20only%20thing%20kissed.webm",
+    caption: "Sun wasn't the only thing kissed"
+  },
+  {
+    src: "https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/WhatsApp%20Image%202026-07-02%20at%2014.47.48.jpeg",
+    caption: "Trademark pose"
+  },
+  { src: "https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/WhatsApp%20Video%202026-07-02%20at%2015.12.39.mp4",
+     caption: "Cactus Garden" 
+    },
+
+
+
+  // This line keeps your local asset folder items working perfectly alongside your links
+  ...LOCAL_MEDIA
+];
 function EmptyGalleryHint() {
   return (
     <div style={{ color: "#a8929a", fontStyle: "italic", fontSize: 13, padding: "20px 0" }}>
