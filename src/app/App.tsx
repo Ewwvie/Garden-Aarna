@@ -460,7 +460,7 @@ export default function App() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const audio = new Audio("/song.mp3");
+    const audio = new Audio("https://svctkowusswvfjhnftgd.supabase.co/storage/v1/object/public/Aarna-garden/98%20Ek%20Ajnabee%20Haseena%20Se%20-%20PagalNew.mp3");
     audio.loop = true;
     audioRef.current = audio;
 
