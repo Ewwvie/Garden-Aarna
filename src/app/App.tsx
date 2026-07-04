@@ -34,7 +34,7 @@ const NOTES_DATA = [
     date: "2026-07-05",
     occasion: "Celebrating your existence",
     title: "A gifting day",
-    content: "Even though my earlier expression of gratitude was met with a shut up call, I am really really thankful not just for ther gift but for you excietment about things...my opposite in just the right way, I love you so much Aarna"
+    content: "Even though my earlier expression of gratitude was met with a shut up call, I am really really thankful not just for ther gift but for your excitement about things and the joy you bring in my life...my opposite in just the right way, I love you so much Aarna"
   },
  
 ];
