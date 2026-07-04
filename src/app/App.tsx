@@ -964,7 +964,7 @@ export default function App() {
               </p>
 
               <p style={{ fontFamily: "'Lora', serif", fontSize: "clamp(20px, 5vw, 26px)", lineHeight: 1.6, margin: 0, color: "#3a2e35" }}>
-                i loveee you a lott
+                I loveee you a lott
                 <br />
                 <span style={{ fontSize: "0.88em", color: "#c46f88" }}>(more than you 😤)</span>
               </p>
@@ -996,7 +996,7 @@ export default function App() {
 
               <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(196,111,136,0.12)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "#b8a4ae", letterSpacing: "0.04em" }}>
-                  — growing a little more every day
+                  — growing like our love for each other
                 </span>
                 <span style={{ fontSize: 18 }}>🌸</span>
               </div>
