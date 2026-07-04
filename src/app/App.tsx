@@ -23,8 +23,6 @@ function isBirthdayModeActive(): boolean {
   return isBirthdayWindow();
 }
 
-// ✍️ ADD YOUR NEW NOTES HERE! 
-// You can add as many as you want. They will automatically sort with the newest on top.
 const NOTES_DATA = [
   {
     id: 1,
@@ -138,9 +136,6 @@ const PHOTOS: GardenPhoto[] = [
      caption: "Cactus Garden" 
     },
 
-
-
-  // This line keeps your local asset folder items working perfectly alongside your links
   ...LOCAL_MEDIA
 ];
 function EmptyGalleryHint() {
